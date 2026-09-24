@@ -1,10 +1,9 @@
 {
   "$schema": "https://turborepo.dev/schema.json",
   "ui": "tui",
-  "globalEnv": ["DATABASE_URL"], 
   "tasks": {
     "build": {
-      "dependsOn": ["^build", "^contract:emit"], 
+      "dependsOn": ["^build"],
       "inputs": ["$TURBO_DEFAULT$", ".env*"],
       "outputs": [".next/**", "!.next/cache/**", "!.next/dev/**"]
     },
@@ -12,23 +11,19 @@
       "dependsOn": ["^lint"]
     },
     "check-types": {
-      "dependsOn": ["^check-types", "^contract:emit"] 
+      "dependsOn": ["^check-types"]
     },
     "dev": {
-      "dependsOn": ["^contract:emit"],
       "cache": false,
       "persistent": true
     },
-    "contract:emit": { 
-      "inputs": ["src/prisma/contract.prisma", "prisma.config.ts"], 
-      "outputs": ["src/prisma/contract.json", "src/prisma/contract.d.ts"] 
-    }, 
-    "migration:plan": { 
-      "dependsOn": ["contract:emit"], 
-      "cache": false
-    }, 
-    "db:migrate": { 
-      "cache": false
-    } 
+     "scripts": { 
+    "dev": "bun run --filter web dev", 
+    "build": "bun run --filter database contract:emit && bun run --filter web build", 
+    "start": "bun run --filter web start", 
+    "db:init": "bun run --filter database db:init", 
+    "db:update": "bun run --filter database db:update", 
+    "seed": "bun run --filter database db:seed"
+  } 
   }
 }
