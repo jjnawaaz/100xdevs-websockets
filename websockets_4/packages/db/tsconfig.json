@@ -1,11 +1,18 @@
 {
-    "extends": "../typescript-config/base.json",
-    "compilerOptions": {
-        "module": "preserve",
-        "moduleResolution": "bundler",
-        "resolveJsonModule": true,
-        "types": [
-            "node"
-        ]
-    }
+  "compilerOptions": {
+    "target": "ES2022",
+    "module": "preserve",
+    "moduleResolution": "bundler",
+    "resolveJsonModule": true,
+    "types": [
+      "node"
+    ],
+    "strict": true,
+    "skipLibCheck": true,
+    "esModuleInterop": true,
+    "outDir": "dist"
+  },
+  "include": [
+    "**/*.ts"
+  ]
 }
