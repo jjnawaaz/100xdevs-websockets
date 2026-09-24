@@ -5,6 +5,7 @@ import "dotenv/config";
 
 // import routes
 import userRoutes from "./routes/userRoutes.js";
+import { errorHandler } from "./middlewares/errorHandler.js";
 
 const app = express();
 
@@ -27,6 +28,9 @@ app.use("/user", userRoutes);
 app.get("/health", (req: Request, res: Response) => {
   res.send("All working good");
 });
+
+// error handler middleware
+app.use(errorHandler);
 
 // start server
 app.listen(PORT, () => {
