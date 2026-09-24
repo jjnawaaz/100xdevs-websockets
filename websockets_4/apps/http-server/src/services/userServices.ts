@@ -1,50 +1,39 @@
-import { SigninType, SignupType } from "@repo/api_contracts";
-import { createHash } from "../utils/bcryptUtils.js";
-import { Response } from "express";
+import { SigninType } from "@repo/api_contracts";
+import { verifyHash } from "../utils/bcryptUtils.js";
 import { db } from "@repo/db";
+import { ERROR_CODES, httpStatusCodes } from "@repo/codes";
+import { AppError } from "../middlewares/errorHandler.js";
 
 // create user service
-export const createUserService = async (data: SignupType, res: Response) => {
-  try {
-    const hashedPassword = await createHash(data.password);
-    const user = await db.orm.public.User.create({
-      email: data.email,
-      name: data.name,
-      password: hashedPassword,
-    });
-
-    return {
-      success: true,
-      data: {
-        id: user.id,
-        email: user.email,
-        name: user.name,
-        createdAt: user.createdAt,
-      },
-    };
-  } catch (err: unknown) {
-    if (err instanceof Error && "sqlState" in err && err.sqlState === "") {
-      return {
-        success: false,
-        data: {
-          message: "User already exists",
-        },
-      };
-    }
-    return {
-      success: false,
-      data: {
-        message: "Internal Server Error",
-      },
-    };
-  }
-};
-
-export const checkSigninUser = async (data: SigninType) => {
-  // get data from db
+export const SignInService = async (data: SigninType) => {
+  // find user in db
   const user = await db.orm.public.User.where({
     email: data.email,
   }).first();
-  // verify password
-  // return required fields
+
+  if (!user) {
+    throw new AppError(
+      "Invalid Credentials",
+      ERROR_CODES.INVALID_CREDENTIALS,
+      httpStatusCodes.UNAUTHORIZED,
+    );
+  }
+
+  // verify hash
+  const isVerified = await verifyHash(data.password, user.password);
+  if (!isVerified) {
+    throw new AppError(
+      "Invalid Credentials",
+      ERROR_CODES.INVALID_CREDENTIALS,
+      httpStatusCodes.UNAUTHORIZED,
+    );
+  }
+
+  return {
+    success: true,
+    data: {
+      id: user.id,
+      email: user.email,
+    },
+  };
 };
