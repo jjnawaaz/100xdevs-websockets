@@ -1,4 +1,4 @@
-import jwt from "jsonwebtoken";
+import jwt, { JsonWebTokenError } from "jsonwebtoken";
 import "dotenv/config";
 export interface JwtData {
   id?: string | undefined;
@@ -42,5 +42,33 @@ export const createToken = (user: JwtData, token: TOKEN) => {
       { expiresIn: "7d" },
     );
     return refresh_token;
+  }
+};
+
+// verifyJwt
+export const verifyToken = (token: string, tokenType: TOKEN) => {
+  try {
+    // check the token type and get secret
+    const secret =
+      tokenType === TOKEN.REFRESH_TOKEN
+        ? (process.env.JWT_REFRESH_SECRET as string)
+        : (process.env.JWT_ACCESS_SECRET as string);
+    // verify token
+    const decoded = jwt.verify(token, secret);
+    return {
+      success: true,
+      tokenData: decoded,
+    };
+  } catch (err: unknown) {
+    if (err instanceof jwt.TokenExpiredError) {
+      return {
+        success: false,
+        expired: true,
+      };
+    }
+    return {
+      success: false,
+      expired: false,
+    };
   }
 };
