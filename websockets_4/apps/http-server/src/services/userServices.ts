@@ -1,10 +1,37 @@
-import { SigninType } from "@repo/api_contracts";
-import { verifyHash } from "../utils/bcryptUtils.js";
+import { SigninType, SignupType } from "@repo/api_contracts";
+import { createHash, verifyHash } from "../utils/bcryptUtils.js";
 import { db } from "@repo/db";
 import { ERROR_CODES, httpStatusCodes } from "@repo/codes";
 import { AppError } from "../middlewares/errorHandler.js";
+import { isDuplicateError } from "../utils/errorUtils.js";
 
-// create user service
+export const SignUpService = async (data: SignupType) => {
+  // check if the user exists
+  try {
+    const hashedPassword = await createHash(data.password);
+    const user = await db.orm.public.User.create({
+      email: data.email,
+      name: data.name,
+      password: hashedPassword,
+    });
+    return {
+      id: user.id,
+      email: user.email,
+      name: user.name,
+    };
+  } catch (err: unknown) {
+    if (isDuplicateError(err)) {
+      throw new AppError(
+        "User already exists",
+        ERROR_CODES.USER_ALREADY_EXISTS,
+        httpStatusCodes.CONFLICT,
+      );
+    }
+    throw err;
+  }
+};
+
+// signin service
 export const SignInService = async (data: SigninType) => {
   // find user in db
   const user = await db.orm.public.User.where({
@@ -30,10 +57,7 @@ export const SignInService = async (data: SigninType) => {
   }
 
   return {
-    success: true,
-    data: {
-      id: user.id,
-      email: user.email,
-    },
+    id: user.id,
+    email: user.email,
   };
 };
